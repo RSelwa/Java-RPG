@@ -1,3 +1,5 @@
+package rpg;
+
 abstract class Entity {
     protected int lp;
     protected int att;

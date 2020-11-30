@@ -1,3 +1,4 @@
+package rpg;
 import java.util.ArrayList;
 
 abstract class Mob extends Entity {

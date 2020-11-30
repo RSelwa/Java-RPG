@@ -1,3 +1,5 @@
+
+package rpg;
 abstract class Weapons extends Item {
   protected int dommage;
   protected boolean equiped = false;

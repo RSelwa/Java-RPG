@@ -1,3 +1,5 @@
+package rpg;
+
 abstract class Item {
     protected int price; 
     protected String name;

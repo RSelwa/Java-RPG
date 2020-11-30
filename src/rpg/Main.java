@@ -1,4 +1,6 @@
+package rpg;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 // import sun.security.util.ArrayUtil;
 
@@ -70,7 +72,8 @@ public class Main {
         map[mob.y][mob.x] = mob.ascii;
       }
       //! faire un generateur de mob ici avec des random position et tout
-
+      int[] mobList = new int[5];
+      System.out.println(mobList.length);
       //*Map
     
       Map(map, p1, marchand, mob, grass);
