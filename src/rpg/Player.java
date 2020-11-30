@@ -9,12 +9,14 @@ abstract class Player extends Entity {
     //lp atts def mana
     protected static String[][] playerChar= {{"Mage","Vous êtes plutot bien équilibré entre sorts et attaque"},{"Elfe","Vous êtes un tueur en attaque mais attention à votre défense"},{"Guerrier","Vous êtes plutôt un tank"},{"Pretre","Vous êtes un grand magicien"}};
     protected static int[][] playerStats = {{100,15,10,50},{80,25,10,0},{100,10,20,0},{120,5,20,100}};
-
+    protected int lpMax;
+    protected int manaMax;
     protected ArrayList<Item> inventory = new ArrayList();
     public Player(String n, int x) {
-        super(n,playerStats[x][0], playerStats[x][1], playerStats[x][2], playerStats[x][3], "⬘", 2, 10);
+        super(n,playerStats[x][0], playerStats[x][1], playerStats[x][2], playerStats[x][3], "⬘", 6, 1);
         this.name = n;
         this.caste = playerChar[x][0];
+        this.lpMax = playerStats[x][0];
+        this.manaMax = playerStats[x][3];
     }
-    
 }

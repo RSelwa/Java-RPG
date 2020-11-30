@@ -1,6 +1,8 @@
 package rpg;
-import java.util.Scanner;
+
 import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 // import sun.security.util.ArrayUtil;
 
@@ -16,7 +18,6 @@ public class Main {
     System.out.println("Choisissez votre classe : ");
     System.out.println("0 : Mage, 1 : Elfe, 2 : Guerrier, 3: Pretre");
     int caste = scanner.nextInt();
-    
     while (caste != 0 && caste != 1 && caste != 2 && caste != 3) {
       System.out.println("Saisissez un nombre correct");
       caste = scanner.nextInt();
@@ -31,7 +32,7 @@ public class Main {
       "Classe : " +
       p1.caste +
       "\n" +
-      p1.playerChar[caste][1]+
+      p1.playerChar[caste][1] +
       "\n" +
       "Lp : " +
       p1.lp +
@@ -45,49 +46,47 @@ public class Main {
       "Mana : " +
       p1.mana +
       "\n" +
-      "Argent : "+
+      "Argent : " +
       p1.money
     );
     //! ======================================================================
+
     //*Matrice de la map
     int l = 10, h = 6; // definition de la longueur et la largeur de la map
+    final ArrayList<Mob> mobList = new ArrayList();
     final String[][] map = new String[h][l];
-    String grass = "□";
     //*Crea PNJ
     PNJ marchand = new PNJ(1, 10) {};
+    Heal heal = new Heal(1, 1) {};
     marchand.addStock(
       new Weapons("Hache de la mort", 55, 15) {},
       new Weapons("Arc de la Terreur", 10, 5) {}
     );
     //* Crea Mob
-    Mob mob = new Mob(0, 2, 6) {};
-
-    do {
-      //position du joueur
-      map[marchand.y][marchand.x] = marchand.ascii;
-      if (p1.alive) {
-        map[p1.y][p1.x] = p1.ascii;
-      }
-      if (mob.alive) {
-        map[mob.y][mob.x] = mob.ascii;
-      }
-      //! faire un generateur de mob ici avec des random position et tout
-      int[] mobList = new int[5];
-      System.out.println(mobList.length);
-      //*Map
-    
-      Map(map, p1, marchand, mob, grass);
-      deplacement(p1, map);
-      if (p1.y == mob.y && p1.x == mob.x) {
-        Fight(p1, mob, map);
-      }
-      if (p1.y == marchand.y && p1.x == marchand.x) {
-        marchand(marchand, p1);
-      }
-    } while (p1.alive);
+    while (p1.alive) {
+      deplacement(p1, map, mobList, marchand, heal);
+    } ;
   }
+
   //!GENERATION DE LA MAP
-  public static void Map(String[][] map, Player p1, PNJ marchand, Mob mob, String grass) {
+  public static void Map(
+    String[][] map,
+    Player p1,
+    PNJ marchand,
+    Heal heal,
+    ArrayList<Mob> mobList,
+    String grass
+  ) {
+
+    map[marchand.y][marchand.x] = marchand.ascii;
+    map[heal.y][heal.x] = heal.ascii;
+    for (Mob el : mobList) {
+      map[el.y][el.x] = el.ascii;
+    }
+    
+    
+    map[p1.y][p1.x] = p1.ascii;
+
     for (int i = 0; i < map.length; i++) {
       for (int j = 0; j < map[i].length; j++) {
         if (map[i][j] == null) {
@@ -103,23 +102,20 @@ public class Main {
     }
     //*légende
     System.out.println("\n");
+   
     System.out.println(
       p1.ascii +
       " = Joueur, " +
       marchand.ascii +
       " = Marchand, " +
-      mob.ascii +
-      " = MOB"
-      +"\n"+"Déplacer vous avec Z, Q, S, D (puis appuyez sur entrée):"
+      " ᴥ/♠/♣  = MOB" +
+      "\n" +
+      "Déplacer vous avec Z, Q, S, D (puis appuyez sur entrée):"
     );
-  
-    //* enleve l'empreinte du tour precedent
-    map[p1.y][p1.x] = null;
   }
 
-  
   //!FIGHT
-  public static void Fight(Player p1, Mob mob, String[][] map) {
+  public static void Fight(Player p1, Mob mob, String[][] map, ArrayList<Mob> mobList) {
     System.out.println("You're on fight now against " + mob.name);
     while (mob.lp > 0) {
       System.out.println("---------------------");
@@ -132,9 +128,8 @@ public class Main {
       System.out.println("---------------------");
       System.out.println("What do you want to do (Attack: a, Nothing : n): ");
       Scanner clavier = new Scanner(System.in);
-      String fightChoose;
       if (clavier.hasNext("a") || clavier.hasNext("A")) {
-        System.out.println( " Vous attaquez "+mob.name );
+        System.out.println(" Vous attaquez " + mob.name);
         p1.attackEntity(mob);
         System.out.println(mob.name + "lp : " + mob.lp);
         System.out.println(mob.name + " vous attaque");
@@ -144,129 +139,134 @@ public class Main {
         System.out.println(mob.name + " vous attaque");
         mob.attackEntity(p1);
         System.out.println(p1.name + "lp : " + p1.lp);
-      }
-      else {
+      } else {
         System.out.println("Entrez une action valide");
       }
       if (mob.lp <= 0) { //win fight
         System.out.println("Le " + mob.name + " a été vaincu");
         p1.money += mob.loot;
-        System.out.println("Vous remportez "+mob.loot + " ©");
+        System.out.println("Vous remportez " + mob.loot + " ©");
         System.out.println();
         mob.alive = false;
       }
     }
-    mob = null;
-  }
-
-  //!MARCHAND
-  public static void marchand(PNJ marchand, Player p1) {
-    System.out.println("Bienvenue chez le marchand");
-    Scanner clavier = new Scanner(System.in);
-    
-    afficherStock(marchand);
-      System.out.println("If you want to Exit, type 'exit'  ");
-      //----------------
-      if(clavier.hasNext("exit")||clavier.hasNext("EXIT")){
-        // if(exit.compareTo("exit") ==0||exit.compareTo("exit") ==0){
-          return;
-        }
-      int res = clavier.nextInt();
-
-      if (res>=0 && res<=marchand.stock.size()) {
-        System.out.println("vous voulez acheter "+marchand.stock.get(res).name+" à "+marchand.stock.get(res).price+" © ?  (y/n)");
-        String resStr = clavier.next();
-        if(resStr.compareTo("y") == 0|| resStr.compareTo("Y") == 0){
-          if(p1.money>=marchand.stock.get(res).price){
-            p1.money -= marchand.stock.get(res).price;
-            p1.inventory.add(marchand.stock.get(res));
-            marchand.stock.remove(marchand.stock.get(res));
-            System.out.println("Vous avez acheté : "+p1.inventory.get(p1.inventory.size()-1).name);
-            System.out.println("Bonne journée");
-          }else{
-            System.out.println("Vous n'avez pas assez d'argent, bonne journée");
-            System.out.println("(tapez 'exit')");
-          }
-          
-        }else if(resStr.compareTo("n") == 0|| resStr.compareTo("N") == 0){
-          System.out.println("D'accord, nous vous souhaitons une bonne journée");
-          System.out.println("(tapez 'exit')");
-        }else{
-          System.out.println("Entrez un resultat valide svp, sortez puis re-rentrez dans le magasin");
-          System.out.println("(tapez 'exit')");
-        }
-      }else{
-        System.out.println("Entrez un resultat valide svp, sortez puis re-rentrez dans le magasin");
-        System.out.println("(tapez 'exit')");
-
-      }
-      if(clavier.hasNext("exit")||clavier.hasNext("EXIT")){
-      // if(exit.compareTo("exit") ==0||exit.compareTo("exit") ==0){
-        return;
-      }
-    // while(clavier.hasNext("exit")||clavier.hasNext("EXIT"))
-    
-  }
-  public static void afficherStock(PNJ marchand){
-    System.out.println("Selectionner un Item à acheter : ");
-    for (int i = 0; i < marchand.stock.size(); i++) {
-        System.out.println("("+i+") - "+marchand.stock.get(i).name +" :  "+ marchand.stock.get(i).price + "©");
-    }
+    mobList.remove(mob);
   }
 
   //! DEPLACEMENT
-  public static void deplacement(Player p1, String[][] map) {
+  public static void deplacement(
+    Player p1,
+    String[][] map,
+    ArrayList<Mob> mobList,
+    PNJ marchand,
+    Heal heal
+  ) {
+    String grass ="□";
+    Map(map, p1, marchand,heal, mobList, grass);
+
+    mobGenerator(mobList, map, p1);
+    //* enleve la trace
+    map[p1.y][p1.x] = null;
+
     Scanner clavier = new Scanner(System.in);
-    if (clavier.hasNext("z") || clavier.hasNext("Z")) {
-      if (p1.y == 0) {
-        System.out.println("Out of Bounds");
-      } else {
-        p1.y -= 1; //y-1
+    String nextMove = clavier.nextLine();
+    System.out.println(nextMove);
+
+    switch (nextMove) {
+      case "z":
+        if (p1.y == 0) {
+          System.out.println("Out of Bounds");
+        } else {
+
+          p1.y -= 1; //y-1
+        }
+        break;
+      case "q":
+        if (p1.x == 0) {
+          System.out.println("Out of Bounds");
+        } else {
+
+          p1.x -= 1; //y-1
+        }
+        break;
+      case "s":
+        if (p1.y + 1 == map.length) {
+          System.out.println("Out of Bounds");
+        } else {
+
+          p1.y += 1; //y+1
+        }
+        break;
+      case "d":
+        if (p1.x + 1 == map[0].length) {
+          System.out.println("Out of Bounds");
+        } else {
+
+          p1.x += 1; //x+1
+        }
+        break;
+      case "i":
+        info(p1);
+        break;
+      default:
+        System.out.println("Entrez un deplacement valide");
+        
       }
-    } else if (clavier.hasNext("q") || clavier.hasNext("Q")) {
-      if (p1.x == 0) {
-        System.out.println("Out of Bounds");
-      } else {
-        p1.x -= 1; //y-1
+          if (p1.y == marchand.y && p1.x == marchand.x) {
+            marchand.marchand(p1);
+          }
+          if (p1.y == heal.y && p1.x == heal.x) {
+            heal.heal(p1);
+          }
+  }
+public static void info(Player p1){
+  System.out.println("Voici vos stats : \n");
+  System.out.println(
+    "Nom : " +
+    p1.name +
+    "\n" +
+    "Classe : " +
+    p1.caste +
+    "\n" +
+    "Lp : " +
+    p1.lp +
+    "\n" +
+    "Att : " +
+    p1.att +
+    "\n" +
+    "Def : " +
+    p1.defense +
+    "\n" +
+    "Mana : " +
+    p1.mana +
+    "\n" +
+    "Argent : " +
+    p1.money
+  );
+}
+  //! MOB GENERATOR
+  public static void mobGenerator(ArrayList<Mob> mobList, String[][] map,Player p1) {
+    if (mobList.size() < 5) {
+      int m = randomeInt(0, 3);
+      int spawn = randomeInt(0, 10);
+      if (spawn < 3) {
+        int h = randomeInt(0, map.length), l = randomeInt(0, map[0].length);
+        if (map[h][l].compareTo("□") == 0) {
+          Mob mob = new Mob(m, h+1, l+1) {};
+          mobList.add(mob);
+        }
       }
-    } else if (clavier.hasNext("s") || clavier.hasNext("S")) {
-      if (p1.y + 1 == map.length) {
-        System.out.println("Out of Bounds");
-      } else {
-        p1.y += 1; //y+1
-      }
-    } else if (clavier.hasNext("d") || clavier.hasNext("D")) {
-      if (p1.x + 1 == map[0].length) {
-        System.out.println("Out of Bounds");
-      } else {
-        p1.x += 1; //x+1
-      }
-    } else if (clavier.hasNext("i") || clavier.hasNext("I")) {
-System.out.println("Voici vos stats : \n");
-System.out.println("Nom : " +
-p1.name +
-"\n" +
-"Classe : " +
-p1.caste +
-"\n" +
-"Lp : " +
-p1.lp +
-"\n" +
-"Att : " +
-p1.att +
-"\n" +
-"Def : " +
-p1.defense +
-"\n" +
-"Mana : " +
-p1.mana +
-"\n" +
-"Argent : "+
-p1.money);
     }
-    else {
-      System.out.println("Entrez un deplacement valide");
+    
+    for(int i =0; i<mobList.size();i++){
+      if (p1.y == mobList.get(i).y && p1.x == mobList.get(i).x) {
+          Fight(p1, mobList.get(i), map, mobList);
+        }
     }
   }
 
+  public static int randomeInt(int min, int max) {
+    int result = ThreadLocalRandom.current().nextInt(min, max);
+    return result;
+  }
 }
