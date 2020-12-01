@@ -23,6 +23,7 @@ public class Main {
       caste = scanner.nextInt();
     }
     Player p1 = new Player(name, caste) {};
+    
     System.out.println(
       "Voici votre personnage : " +
       "\n" +
@@ -55,17 +56,19 @@ public class Main {
     int l = 10, h = 6; // definition de la longueur et la largeur de la map
     final ArrayList<Mob> mobList = new ArrayList();
     final String[][] map = new String[h][l];
-    //*Crea PNJ
+    //*Crea PNJ et shop
     PNJ marchand = new PNJ(1, 10) {};
     Heal heal = new Heal(1, 1) {};
     marchand.addStock(
-      new Weapons("Hache de la mort", 55, 15) {},
-      new Weapons("Arc de la Terreur", 10, 5) {}
+      new Weapons("Hache de la mort", 55, 15,false) {},
+      new Weapons("Arc de la Terreur", 10, 5,false) {}
     );
-    //* Crea Mob
-    while (p1.alive) {
+    while (p1.lp>0) {
       deplacement(p1, map, mobList, marchand, heal);
     } ;
+    if(p1.lp<0){
+      System.out.println("GAME OVER");
+    }
   }
 
   //!GENERATION DE LA MAP
@@ -108,9 +111,10 @@ public class Main {
       " = Joueur, " +
       marchand.ascii +
       " = Marchand, " +
-      " ᴥ/♠/♣  = MOB" +
+      " ᴥ/♠/♣  = MOB," +
+      "♥  = HEAL"+
       "\n" +
-      "Déplacer vous avec Z, Q, S, D (puis appuyez sur entrée):"
+      "Déplacer vous avec Z, Q, S, D -- i pour info et e pour equipement (puis appuyez sur entrée):"
     );
   }
 
@@ -126,28 +130,49 @@ public class Main {
       System.out.println("  lp : " + p1.lp);
       System.out.println("  Att : " + p1.att);
       System.out.println("---------------------");
-      System.out.println("What do you want to do (Attack: a, Nothing : n): ");
+      System.out.println("What do you want to do (Attack: a,Magie : m, Nothing : n): ");
       Scanner clavier = new Scanner(System.in);
-      if (clavier.hasNext("a") || clavier.hasNext("A")) {
-        System.out.println(" Vous attaquez " + mob.name);
-        p1.attackEntity(mob);
-        System.out.println(mob.name + "lp : " + mob.lp);
-        System.out.println(mob.name + " vous attaque");
-        mob.attackEntity(p1);
-        System.out.println(p1.name + "lp : " + p1.lp);
-      } else if (clavier.hasNext("n") || clavier.hasNext("N")) {
-        System.out.println(mob.name + " vous attaque");
-        mob.attackEntity(p1);
-        System.out.println(p1.name + "lp : " + p1.lp);
-      } else {
-        System.out.println("Entrez une action valide");
+      String nextMove = clavier.nextLine();
+      switch(nextMove){
+        case "a":
+          System.out.println(" Vous attaquez " + mob.name+" avec "+p1.att+" deg");
+          p1.attackEntity(mob);
+          System.out.println(mob.name + "lp : " + mob.lp);
+          System.out.println(mob.name + " vous attaque"+" avec "+mob.att+" deg");
+          mob.attackEntity(p1);
+          System.out.println("\n");
+          System.out.println(p1.name + "  lp : " + p1.lp);
+          break;
+        case "m":
+        System.out.println("ce sort vous coute 5 mana");
+        System.out.println(" Vous attaquez " + mob.name+" avec "+p1.magicAtt+" deg");
+        p1.magicEntity(mob,p1);
+          System.out.println(mob.name + "lp : " + mob.lp);
+          System.out.println(mob.name + " vous attaque"+" avec "+mob.att+" deg");
+          mob.attackEntity(p1);
+          System.out.println("\n");
+          System.out.println(p1.name + "  lp : " + p1.lp);
+          break;
+        case "n":
+          System.out.println(mob.name + " vous attaque"+" avec "+mob.att);
+          mob.attackEntity(p1);
+          System.out.println("\n");
+          System.out.println(p1.name + "  lp : " + p1.lp);
+          break;
+        default:
+          System.out.println("Entrez une action valide");
       }
+      
       if (mob.lp <= 0) { //win fight
+        
         System.out.println("Le " + mob.name + " a été vaincu");
         p1.money += mob.loot;
         System.out.println("Vous remportez " + mob.loot + " ©");
         System.out.println();
         mob.alive = false;
+      }
+      if(p1.lp<0){
+        return;
       }
     }
     mobList.remove(mob);
@@ -208,6 +233,9 @@ public class Main {
       case "i":
         info(p1);
         break;
+      case "e":
+        equipement(p1);
+        break;
       default:
         System.out.println("Entrez un deplacement valide");
         
@@ -219,7 +247,8 @@ public class Main {
             heal.heal(p1);
           }
   }
-public static void info(Player p1){
+  //! INFOS
+  public static void info(Player p1){
   System.out.println("Voici vos stats : \n");
   System.out.println(
     "Nom : " +
@@ -241,10 +270,41 @@ public static void info(Player p1){
     p1.mana +
     "\n" +
     "Argent : " +
-    p1.money
+    p1.money+
+    "\n"
   );
+  for(Item el : p1.inventory){
+    System.out.println(el.name+" : "+el.dommage +" deg");
+  }
 }
-  //! MOB GENERATOR
+  //! EQUIPREMENT
+  public static void equipement(Player p1){
+    System.out.println("Voulez-vous changez d'equipement ?");
+    if(p1.inventory.size()==0){
+      System.out.println("Vous n'avez aucune arme");
+    }
+    for(int i = 0; i< p1.inventory.size();i++){
+      if(p1.inventory.get(i).equiped==false){
+        System.out.println("("+(i+1)+") "+p1.inventory.get(i).name+" : "+p1.inventory.get(i).dommage +" deg");
+        }
+      }
+        Scanner clavier = new Scanner(System.in);
+        String nextMove =clavier.nextLine();
+   
+    switch(nextMove){
+      case "1":
+      int nexInt = Integer.parseInt(nextMove);
+      p1.changeWeapons(p1.inventory.get(nexInt -1));
+      break;
+      case "2":
+      nexInt = Integer.parseInt(nextMove);
+      p1.changeWeapons(p1.inventory.get(nexInt -1));
+      break;
+      default:
+      System.out.println("Entrez une réponse valide");
+    }
+  }  
+//! MOB GENERATOR
   public static void mobGenerator(ArrayList<Mob> mobList, String[][] map,Player p1) {
     if (mobList.size() < 5) {
       int m = randomeInt(0, 3);

@@ -65,7 +65,9 @@ abstract class Mob extends Entity {
     int x,
     int y
     ) {
-    super(mobChar[i][0],mobStats[i][0], mobStats[i][1], mobStats[i][2], mobStats[i][3], mobChar[i][2], x, y);
+    super(mobChar[i][0],mobStats[i][0], mobStats[i][1], mobStats[i][2], mobStats[i][3], mobChar[i][2], x, y, new Weapons("tooth", 0,0,true){
+      
+    });
   this.loot = mobStats[i][4];
   this.skin = mobChar[i][1];
 }

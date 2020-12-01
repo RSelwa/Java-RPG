@@ -2,9 +2,13 @@ package rpg;
 
 abstract class Item {
     protected int price; 
+    protected int dommage; 
     protected String name;
-    public Item(String name, int price) {
+    protected boolean equiped;
+    public Item(String name, int price, int dommage, boolean f) {
         this.name = name;
         this.price = price;
+        this.dommage = dommage;
+        this.equiped = f;
     }
 }

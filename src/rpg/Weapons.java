@@ -1,10 +1,9 @@
 
 package rpg;
 abstract class Weapons extends Item {
-  protected int dommage;
   protected boolean equiped = false;
-    public Weapons(String name, int price, int d){
-      super(name, price);
-      this.dommage = d;
+    public Weapons(String name, int price, int d, boolean f){
+      super(name, price, d,f);
+      // this.dommage = d;
     }
 }

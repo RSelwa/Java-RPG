@@ -20,6 +20,7 @@ abstract class PNJ{
 
     public  void marchand( Player p1) {
       System.out.println("Bienvenue chez le marchand");
+      System.out.println("Vous avez "+p1.money+" © ");
       
       afficherStock();
       System.out.println("If you want to Exit, type 'exit'  ");
