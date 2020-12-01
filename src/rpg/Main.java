@@ -114,7 +114,7 @@ public class Main {
       " ᴥ/♠/♣  = MOB," +
       "♥  = HEAL"+
       "\n" +
-      "Déplacer vous avec Z, Q, S, D -- i pour info et e pour equipement (puis appuyez sur entrée):"
+      "Déplacer vous avec Z, Q, S, D | i pour info | e pour equipement (puis appuyez sur entrée):"
     );
   }
 
